@@ -9,37 +9,44 @@
         /* BASE & FULLSCREEN LOCKOUT */
         /* =================================================================== */
         html, body {
-            /* Aggressively cover 100% of the viewport */
             width: 100vw;
             height: 100vh;
             margin: 0;
             padding: 0;
-            overflow: hidden; /* Prevents all browser-level scrolling */
+            overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
             background-color: #000;
             color: #E8E8E8;
             text-align: center;
-            user-select: none; /* Disable text selection */
-            cursor: none; /* Hide cursor/touch indicator */
-            -webkit-overflow-scrolling: none; /* Disable momentum scrolling */
-            overscroll-behavior: none; /* Prevent pull-to-refresh */
+            user-select: none;
+            cursor: none;
+            -webkit-overflow-scrolling: none;
+            overscroll-behavior: none;
+            position: fixed;
+            top: 0;
+            left: 0;
         }
 
-        /* The main container covering the entire screen */
         .lock-layer {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             background-color: #000;
-            z-index: 99999; /* Highest possible layer */
+            z-index: 99999;
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            touch-action: none; /* Disable touch gestures */
-            pointer-events: auto; /* Allow clicks on children */
+            touch-action: none;
+            pointer-events: auto;
+        }
+
+        /* Dynamically set height to cover full screen */
+        .lock-layer.fullscreen {
+            width: 100vw;
+            height: 100vh;
         }
 
         /* =================================================================== */
@@ -87,6 +94,14 @@
             margin-top: 5px;
             margin-bottom: 15px;
             line-height: 1.4;
+        }
+
+        /* Prompt for user interaction */
+        #fullscreen-prompt {
+            color: #FFCC00;
+            font-size: 0.9em;
+            margin-top: 10px;
+            display: none;
         }
 
         /* =================================================================== */
@@ -141,7 +156,7 @@
     </style>
 </head>
 <body>
-    <div class="lock-layer">
+    <div class="lock-layer" id="lock-layer">
         <div class="error-container" id="error-box">
             <h1>❌ KERNEL PANIC: SYSTEM CRASH ❌</h1>
             <p class="critical-message">
@@ -156,6 +171,7 @@
             </p>
             <input type="tel" id="activation-input" maxlength="4" placeholder="••••" pattern="[0-9]*" inputmode="numeric" autofocus>
             <button id="enter-button">ACTIVATE</button>
+            <p id="fullscreen-prompt">Tap ACTIVATE to enter recovery mode.</p>
             <p style="font-size: 0.7em; margin-top: 25px; color: #8C8C8C;">DO NOT RESTART. CONTACT 1-800-GULLIBLE IMMEDIATELY.</p>
         </div>
     </div>
@@ -166,6 +182,8 @@
         const button = document.getElementById('enter-button');
         const errorBox = document.getElementById('error-box');
         const statusMessage = document.getElementById('status-message');
+        const lockLayer = document.getElementById('lock-layer');
+        const fullscreenPrompt = document.getElementById('fullscreen-prompt');
         const prankCode = '1234';
         const rickrollUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
@@ -175,48 +193,70 @@
         function enterFullscreen() {
             const elem = document.documentElement;
             if (elem.requestFullscreen) {
-                elem.requestFullscreen().catch(err => {
+                elem.requestFullscreen().then(() => {
+                    lockLayer.classList.add('fullscreen');
+                    fullscreenPrompt.style.display = 'none';
+                }).catch(err => {
                     console.warn('Fullscreen failed:', err);
+                    fullscreenPrompt.style.display = 'block';
                 });
             } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari */
-                elem.webkitRequestFullscreen().catch(err => {
+                elem.webkitRequestFullscreen().then(() => {
+                    lockLayer.classList.add('fullscreen');
+                    fullscreenPrompt.style.display = 'none';
+                }).catch(err => {
                     console.warn('Fullscreen failed:', err);
+                    fullscreenPrompt.style.display = 'block';
                 });
+            } else {
+                // Fallback for unsupported browsers
+                lockLayer.classList.add('fullscreen');
+                fullscreenPrompt.style.display = 'block';
             }
-            // Ensure input remains focused after fullscreen
             setTimeout(() => input.focus(), 100);
         }
 
-        // Trigger fullscreen on load (Chrome requires user interaction, so also bind to button click)
-        window.onload = () => {
-            enterFullscreen();
-            focusInput();
-        };
+        // Dynamically adjust lock-layer size on resize
+        function adjustViewport() {
+            lockLayer.style.width = `${window.innerWidth}px`;
+            lockLayer.style.height = `${window.innerHeight}px`;
+        }
+        window.addEventListener('resize', adjustViewport);
+        adjustViewport();
 
-        // Bind fullscreen to button click as a fallback (Chrome requires user gesture)
+        // Trigger fullscreen on user interaction
         button.addEventListener('click', () => {
             enterFullscreen();
             checkCode();
         });
+        input.addEventListener('touchstart', enterFullscreen, { once: true });
 
-        // Detect if page is not opened in Chrome and suggest it
+        // Show prompt if not in fullscreen after load
+        window.onload = () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                fullscreenPrompt.style.display = 'block';
+            }
+            adjustViewport();
+            focusInput();
+        };
+
+        // Detect non-Chrome browsers and suggest Chrome
         function suggestChrome() {
             if (!/Chrome/.test(navigator.userAgent) && /Android/.test(navigator.userAgent)) {
-                showStatus("Please open in Chrome for best experience.");
-                // Attempt to redirect to Chrome via intent
+                showStatus("Please open in Chrome for full recovery mode.");
                 const intentUrl = `intent://${window.location.host}${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end`;
-                window.location.href = intentUrl;
+                setTimeout(() => {
+                    window.location.href = intentUrl;
+                }, 2000);
             }
         }
-
-        // Check browser on load
         suggestChrome();
 
         // ===================================================================
         // 2. AGGRESSIVE SCROLL/TOUCH BLOCKER
         // ===================================================================
         function preventAllScrolling(e) {
-            if (e.target.id === 'activation-input') {
+            if (e.target.id === 'activation-input' || e.target.id === 'enter-button') {
                 return;
             }
             e.preventDefault();
@@ -238,15 +278,17 @@
 
         // Block additional keyboard shortcuts
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'F5' || (e.altKey && e.key === 'ArrowLeft') || e.key === 'F12' || 
+            if (e.key === 'F5' || e.key === 'F12' || 
+                (e.altKey && e.key === 'ArrowLeft') || 
                 (e.ctrlKey && ['w', 't', 'r', 'Shift'].includes(e.key))) {
                 e.preventDefault();
             }
         });
 
-        // Prevent context menu and zooming
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('gesturechange', e => e.preventDefault());
+        document.addEventListener('gestureend', e => e.preventDefault());
 
         // Prevent back navigation
         history.pushState(null, null, location.href);
@@ -267,9 +309,10 @@
             if (input.value === prankCode) {
                 showStatus("✅ ACCESS GRANTED. CLEANSING SYSTEM...");
                 document.body.removeEventListener('touchmove', preventAllScrolling);
-                // Exit fullscreen before redirect
                 if (document.exitFullscreen) {
                     document.exitFullscreen().catch(() => {});
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen().catch(() => {});
                 }
                 setTimeout(() => {
                     window.location.href = rickrollUrl;
