@@ -8,71 +8,62 @@
         /* =================================================================== */
         /* BASE & FULLSCREEN LOCKOUT */
         /* =================================================================== */
-
-        body, html {
-            /* Aggressively cover 100% of the viewport. */
-            width: 100%; 
-            height: 100%;
+        html, body {
+            /* Aggressively cover 100% of the viewport */
+            width: 100vw;
+            height: 100vh;
             margin: 0;
             padding: 0;
-            
-            /* **CORE BLOCKER:** Prevents all browser-level scrolling */
-            overflow: hidden; 
-            
+            overflow: hidden; /* Prevents all browser-level scrolling */
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
             background-color: #000;
             color: #E8E8E8;
             text-align: center;
             user-select: none; /* Disable text selection */
             cursor: none; /* Hide cursor/touch indicator */
-            
-            /* Aggressive anti-scroll for mobile */
-            -webkit-overflow-scrolling: touch; 
+            -webkit-overflow-scrolling: none; /* Disable momentum scrolling */
+            overscroll-behavior: none; /* Prevent pull-to-refresh */
         }
 
-        /* The main container covering the entire screen aggressively */
+        /* The main container covering the entire screen */
         .lock-layer {
-            position: fixed; 
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             background-color: #000;
-            z-index: 99999; /* Highest possible layer to cover everything */
+            z-index: 99999; /* Highest possible layer */
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            
-            /* Disable any pointer/touch events on the main layer */
-            touch-action: none; 
-            pointer-events: auto; /* Allow clicks on children elements */
+            touch-action: none; /* Disable touch gestures */
+            pointer-events: auto; /* Allow clicks on children */
         }
 
         /* =================================================================== */
         /* ERROR MESSAGE STYLING */
         /* =================================================================== */
-        
         .error-container {
             width: 90%;
             max-width: 400px;
             padding: 25px;
             border: 2px solid #FF3B30;
-            border-radius: 15px; /* Softer radius */
+            border-radius: 15px;
             background-color: #1A1A1A;
-            box-shadow: 0 0 40px rgba(255, 59, 48, 0.7); /* Stronger glow */
-            z-index: 100000; /* Must be above the lock-layer */
-            pointer-events: auto; /* Allow interaction with the box */
+            box-shadow: 0 0 40px rgba(255, 59, 48, 0.7);
+            z-index: 100000;
+            pointer-events: auto;
         }
 
         h1 {
             color: #FF3B30;
             font-size: 1.8em;
             margin-bottom: 10px;
-            animation: pulse 1s infinite alternate; /* Subtle breathing effect */
+            animation: pulse 1s infinite alternate;
         }
 
-        /* NEW: Custom red error message on failed attempts */
         #status-message {
             height: 20px;
             color: #FF3B30;
@@ -101,19 +92,18 @@
         /* =================================================================== */
         /* INPUT & BUTTON STYLING */
         /* =================================================================== */
-
         #activation-input {
             width: 80%;
             padding: 15px;
             margin-top: 15px;
-            border: 3px solid #FF3B30; /* Red border focus */
+            border: 3px solid #FF3B30;
             border-radius: 8px;
             font-size: 1.5em;
             text-align: center;
             background-color: #000;
             color: #E8E8E8;
             outline: none;
-            letter-spacing: 8px; /* More spacing */
+            letter-spacing: 8px;
             box-shadow: 0 0 10px rgba(255, 59, 48, 0.4);
         }
 
@@ -138,16 +128,11 @@
         /* =================================================================== */
         /* ANIMATIONS */
         /* =================================================================== */
-
         @keyframes pulse {
-            0% {
-                text-shadow: 0 0 5px rgba(255, 59, 48, 0.5);
-            }
-            100% {
-                text-shadow: 0 0 15px rgba(255, 59, 48, 1);
-            }
+            0% { text-shadow: 0 0 5px rgba(255, 59, 48, 0.5); }
+            100% { text-shadow: 0 0 15px rgba(255, 59, 48, 1); }
         }
-        
+
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-10px); }
@@ -165,16 +150,12 @@
             <p>
                 Your device's mobile data, Wi-Fi, and notification services are temporarily offline for diagnostics. Any attempt to swipe or access system controls will be immediately rejected.
             </p>
-            
             <p id="status-message">ACCESS DENIED. ATTEMPT LOGGED.</p>
-
             <p>
                 **EMERGENCY RE-ACTIVATION REQUIRED:** Please enter the security bypass code below to restore control.
             </p>
-
             <input type="tel" id="activation-input" maxlength="4" placeholder="••••" pattern="[0-9]*" inputmode="numeric" autofocus>
             <button id="enter-button">ACTIVATE</button>
-
             <p style="font-size: 0.7em; margin-top: 25px; color: #8C8C8C;">DO NOT RESTART. CONTACT 1-800-GULLIBLE IMMEDIATELY.</p>
         </div>
     </div>
@@ -185,67 +166,98 @@
         const button = document.getElementById('enter-button');
         const errorBox = document.getElementById('error-box');
         const statusMessage = document.getElementById('status-message');
-        const prankCode = '1234'; // The activation code to turn off the prank
+        const prankCode = '1234';
         const rickrollUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
         // ===================================================================
-        // 1. AGGRESSIVE SCROLL/TOUCH BLOCKER
+        // 1. FULLSCREEN MODE
         // ===================================================================
-        
+        function enterFullscreen() {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen().catch(err => {
+                    console.warn('Fullscreen failed:', err);
+                });
+            } else if (elem.webkitRequestFullscreen) { /* Chrome, Safari */
+                elem.webkitRequestFullscreen().catch(err => {
+                    console.warn('Fullscreen failed:', err);
+                });
+            }
+            // Ensure input remains focused after fullscreen
+            setTimeout(() => input.focus(), 100);
+        }
+
+        // Trigger fullscreen on load (Chrome requires user interaction, so also bind to button click)
+        window.onload = () => {
+            enterFullscreen();
+            focusInput();
+        };
+
+        // Bind fullscreen to button click as a fallback (Chrome requires user gesture)
+        button.addEventListener('click', () => {
+            enterFullscreen();
+            checkCode();
+        });
+
+        // Detect if page is not opened in Chrome and suggest it
+        function suggestChrome() {
+            if (!/Chrome/.test(navigator.userAgent) && /Android/.test(navigator.userAgent)) {
+                showStatus("Please open in Chrome for best experience.");
+                // Attempt to redirect to Chrome via intent
+                const intentUrl = `intent://${window.location.host}${window.location.pathname}#Intent;scheme=https;package=com.android.chrome;end`;
+                window.location.href = intentUrl;
+            }
+        }
+
+        // Check browser on load
+        suggestChrome();
+
+        // ===================================================================
+        // 2. AGGRESSIVE SCROLL/TOUCH BLOCKER
+        // ===================================================================
         function preventAllScrolling(e) {
-            // Check if the event target is the input field itself. If it is, allow it.
             if (e.target.id === 'activation-input') {
                 return;
             }
-            
-            // CRITICAL: Block default touch and swipe actions
-            e.preventDefault(); 
+            e.preventDefault();
             e.stopPropagation();
-
-            // Aggressive scroll reset: ensures screen position is 0, 0
-            window.scrollTo(0, 0); 
+            window.scrollTo(0, 0);
             document.documentElement.scrollTop = 0;
             document.body.scrollTop = 0;
-            
-            // OPTIONAL: Shake the error box to show the "rejection" if they try to swipe.
             errorBox.style.animation = 'shake 0.5s';
             setTimeout(() => {
                 errorBox.style.animation = '';
             }, 500);
         }
-        
-        // Listen for all touch and scroll events on the body and window
+
         document.body.addEventListener('touchstart', preventAllScrolling, { passive: false });
         document.body.addEventListener('touchmove', preventAllScrolling, { passive: false });
         document.body.addEventListener('touchend', preventAllScrolling, { passive: false });
         document.body.addEventListener('scroll', preventAllScrolling, { passive: false });
         window.addEventListener('scroll', preventAllScrolling, { passive: false });
-        
-        // Prevent keyboard events that might allow escape (e.g. F5, Alt+Left)
+
+        // Block additional keyboard shortcuts
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'F5' || (e.altKey && e.key === 'ArrowLeft')) {
+            if (e.key === 'F5' || (e.altKey && e.key === 'ArrowLeft') || e.key === 'F12' || 
+                (e.ctrlKey && ['w', 't', 'r', 'Shift'].includes(e.key))) {
                 e.preventDefault();
             }
         });
 
-        // Prevent standard right-click/context menu
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-        });
+        // Prevent context menu and zooming
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('gesturestart', e => e.preventDefault());
 
-        // Prevent zooming
-        document.addEventListener('gesturestart', function(e) {
-            e.preventDefault();
-        });
+        // Prevent back navigation
+        history.pushState(null, null, location.href);
+        window.onpopstate = () => history.go(1);
 
         // ===================================================================
-        // 2. ACTIVATION LOGIC
+        // 3. ACTIVATION LOGIC
         // ===================================================================
-
         function showStatus(message) {
             statusMessage.textContent = message;
             statusMessage.style.opacity = '1';
-            // Hide the status message after a short time
             setTimeout(() => {
                 statusMessage.style.opacity = '0';
             }, 2500);
@@ -253,52 +265,41 @@
 
         function checkCode() {
             if (input.value === prankCode) {
-                // Prank OFF: Redirect to a final funny message
                 showStatus("✅ ACCESS GRANTED. CLEANSING SYSTEM...");
-                
-                // Disable all blocking scripts before redirecting
                 document.body.removeEventListener('touchmove', preventAllScrolling);
-                
-                // Final success delay before Rickroll
-                setTimeout(() => {
-                     window.location.href = rickrollUrl; 
-                }, 1000);
-
-            } else {
-                // Prank ON: Show a custom in-page "Access Denied" error
-                showStatus("‼️ ACCESS DENIED ‼️. Attempt logged.");
-                
-                // VIBRATE the phone for a system-level rejection feel (Android only)
-                if (navigator.vibrate) {
-                    navigator.vibrate(300); // Vibrate for 300ms
+                // Exit fullscreen before redirect
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(() => {});
                 }
-
-                // Shake the error box on failure
+                setTimeout(() => {
+                    window.location.href = rickrollUrl;
+                }, 1000);
+            } else {
+                showStatus("‼️ ACCESS DENIED ‼️. Attempt logged.");
+                if (navigator.vibrate) {
+                    navigator.vibrate(300);
+                }
                 errorBox.style.animation = 'shake 0.5s';
                 setTimeout(() => {
                     errorBox.style.animation = '';
                 }, 500);
-                
-                input.value = ''; // Clear the input
+                input.value = '';
                 input.focus();
             }
         }
 
         button.addEventListener('click', checkCode);
         input.addEventListener('keyup', function(event) {
-            if (event.keyCode === 13) {
+            if (event.key === 'Enter') {
                 checkCode();
             }
         });
 
-        // Focus the input field on load and re-focus aggressively
+        // Focus input field
         function focusInput() {
             input.focus();
         }
-        window.onload = focusInput;
-        // Aggressively re-focus after a short delay, useful if the keyboard is dismissed
-        setInterval(focusInput, 5000); 
-
+        setInterval(focusInput, 5000);
     </script>
 </body>
 </html>
