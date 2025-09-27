@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Device Lock</title>
+    <style>
+        /* CSS for the full-screen black overlay and styling */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Prevent scrolling */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            background-color: #000; /* Black background */
+            color: #E8E8E8; /* Light gray/white text */
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            user-select: none; /* Disable text selection for a more "locked" feel */
+        }
+
+        /* Content box for the error message */
+        .error-container {
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            border: 2px solid #FF3B30; /* Red border for an error feel */
+            border-radius: 10px;
+            background-color: #1A1A1A; /* Dark gray for the container */
+            box-shadow: 0 0 30px rgba(255, 59, 48, 0.4); /* Subtle glow */
+        }
+
+        h1 {
+            color: #FF3B30; /* Bright red for the main error */
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        p {
+            font-size: 1em;
+            margin-top: 5px;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        /* Style for the activation code input field */
+        #activation-input {
+            width: 80%;
+            padding: 10px;
+            margin-top: 15px;
+            border: 2px solid #5E5E5E;
+            border-radius: 5px;
+            font-size: 1.2em;
+            text-align: center;
+            background-color: #333;
+            color: #E8E8E8;
+            outline: none; /* Remove focus outline */
+            letter-spacing: 5px; /* Spacing out the characters */
+        }
+
+        /* Style for the 'Enter' button */
+        #enter-button {
+            padding: 10px 20px;
+            margin-top: 15px;
+            background-color: #0A84FF; /* Blue color */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #enter-button:hover {
+            background-color: #007AFF;
+        }
+
+        /* Hide notification bar/status bar effect (this is a visual *prank* and doesn't actually hide the real one) */
+        .status-bar-cover {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 30px; /* Simulate height of a status bar */
+            background-color: #000;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar-cover"></div>
+
+    <div class="error-container">
+        <h1>🚨 CRITICAL SYSTEM ERROR 🚨</h1>
+        <p>
+            **ATTENTION:** Your device has been flagged for unauthorized access. All system functions, including the **power button and all touch/scroll inputs**, have been temporarily disabled for security purposes.
+        </p>
+
+        <p>
+            To restore full functionality, please enter the unique device activation code below.
+        </p>
+
+        <input type="tel" id="activation-input" maxlength="4" placeholder="••••" pattern="[0-9]*" inputmode="numeric" autofocus>
+        <button id="enter-button">ENTER</button>
+
+        <p style="font-size: 0.8em; margin-top: 25px; color: #8C8C8C;">**Activation Hotline:** 1-800-GULLIBLE</p>
+    </div>
+
+    <script>
+        // JavaScript for the prank functionality
+
+        const input = document.getElementById('activation-input');
+        const button = document.getElementById('enter-button');
+        const prankCode = '1234'; // The activation code to turn off the prank
+
+        // 1. Prevent all scrolling and touch inputs on the body
+        document.body.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        // 2. Prevent right-click/context menu (more for desktop prank)
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // 3. Fake 'Power Button' effect: Detects if the user tries to use the device's power button/lock screen (by listening for visibility change)
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                // If the user tries to turn off the screen, we'll flash an error when they turn it back on.
+                console.log("User tried to press the power button!");
+                // Optionally, you can add a persistent fake sound here, but for now, we'll keep it visual.
+            } else {
+                // When they return to the page (press power button again), we can reload or show a brief error.
+                // For a simpler prank, we'll just keep the current state.
+            }
+        });
+
+
+        // 4. Activation Code Logic
+        function checkCode() {
+            if (input.value === prankCode) {
+                // Prank OFF: Redirect to a final funny message or a real site
+                alert("ACCESS GRANTED! System Error Cleared. Thank you for using the official Prank Activation Service.");
+                // Redirect the user back to the link you originally intended for them to see
+                window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; // Rickroll or other funny site
+            } else {
+                // Prank ON: Show a fake "Access Denied" error
+                alert("‼️ ACCESS DENIED ‼️: Incorrect Code. Please try again or contact the activation hotline. (Attempted code: " + input.value + ")");
+                input.value = ''; // Clear the input
+                input.focus();
+            }
+        }
+
+        button.addEventListener('click', checkCode);
+        input.addEventListener('keyup', function(event) {
+            // Check if the Enter key (key 13) was pressed
+            if (event.keyCode === 13) {
+                checkCode();
+            }
+        });
+
+        // Focus the input field on load for a better mobile experience
+        window.onload = function() {
+            input.focus();
+        };
+
+    </script>
+</body>
+</html>
