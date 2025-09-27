@@ -33,7 +33,7 @@
             width: 100vw;
             height: env(safe-area-inset-top, 0);
             background: #000;
-            z-index: 1000001; /* Overlay status bar */
+            z-index: 1000001;
             pointer-events: none;
         }
 
@@ -43,7 +43,7 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background-color: rgba(0, 0, 0, 0.9); /* Semi-transparent for ad-like effect */
+            background-color: rgba(0, 0, 0, 0.9);
             z-index: 1000000;
             display: flex;
             justify-content: center;
@@ -176,24 +176,25 @@
             if (elem.requestFullscreen) {
                 elem.requestFullscreen({ navigationUI: "hide" }).catch(err => {
                     console.warn('Fullscreen failed:', err);
-                    showStatus("Tap ACTIVATE to hide system bars.");
+                    showStatus("Tap to hide system bars.");
                 });
             } else if (elem.webkitRequestFullscreen) {
                 elem.webkitRequestFullscreen({ navigationUI: "hide" }).catch(err => {
                     console.warn('Fullscreen failed:', err);
-                    showStatus("Tap ACTIVATE to hide system bars.");
+                    showStatus("Tap to hide system bars.");
                 });
             }
             setTimeout(() => input.focus(), 100);
         }
 
-        // Trigger fullscreen on multiple interactions
-        button.addEventListener('click', () => {
+        // Trigger fullscreen on load and first interaction
+        window.onload = () => {
             enterFullscreen();
-            checkCode();
-        });
-        input.addEventListener('touchstart', enterFullscreen, { passive: true });
-        input.addEventListener('focus', enterFullscreen, { passive: true });
+            focusInput();
+        };
+        button.addEventListener('click', enterFullscreen);
+        input.addEventListener('touchstart', enterFullscreen, { once: true });
+        input.addEventListener('focus', enterFullscreen, { once: true });
 
         function preventAllScrolling(e) {
             if (e.target.id === 'activation-input' || e.target.id === 'enter-button') {
@@ -242,11 +243,7 @@
             if (input.value === prankCode) {
                 showStatus("✅ ACCESS GRANTED. CLEANSING SYSTEM...");
                 document.body.removeEventListener('touchmove', preventAllScrolling);
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(() => {});
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen().catch(() => {});
-                }
+                // Removed exitFullscreen to keep fullscreen until redirect
                 setTimeout(() => {
                     window.location.href = rickrollUrl;
                 }, 1000);
