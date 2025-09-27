@@ -2,193 +2,283 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>!!! SYSTEM KERNEL FAILURE !!!</title>
     <style>
-        /* CSS for the full-screen black overlay and styling */
+        /* =================================================================== */
+        /* BASE & FULLSCREEN LOCKOUT */
+        /* =================================================================== */
+
         body, html {
+            /* Aggressively cover 100% of the viewport. */
+            width: 100%; 
+            height: 100%;
             margin: 0;
             padding: 0;
-            height: 100%;
-            width: 100%; /* Ensure full width */
-            overflow: hidden; /* **CORE BLOCKER: Prevents scrolling on the page content** */
+            
+            /* **CORE BLOCKER:** Prevents all browser-level scrolling */
+            overflow: hidden; 
+            
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-            background-color: #000; /* Black background */
-            color: #E8E8E8; /* Light gray/white text */
+            background-color: #000;
+            color: #E8E8E8;
             text-align: center;
+            user-select: none; /* Disable text selection */
+            cursor: none; /* Hide cursor/touch indicator */
+            
+            /* Aggressive anti-scroll for mobile */
+            -webkit-overflow-scrolling: touch; 
+        }
+
+        /* The main container covering the entire screen aggressively */
+        .lock-layer {
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 99999; /* Highest possible layer to cover everything */
             display: flex;
             justify-content: center;
             align-items: center;
             flex-direction: column;
-            user-select: none; /* Disable text selection for a more "locked" feel */
-            cursor: none; /* Hides the touch cursor/pointer */
+            
+            /* Disable any pointer/touch events on the main layer */
+            touch-action: none; 
+            pointer-events: auto; /* Allow clicks on children elements */
         }
+
+        /* =================================================================== */
+        /* ERROR MESSAGE STYLING */
+        /* =================================================================== */
         
-        /* **AGGRESSIVE FULLSCREEN TRICK** */
-        body {
-            /* This property, while deprecated, sometimes helps Android browsers fill the entire viewport */
-            -webkit-overflow-scrolling: touch; 
-        }
-
-        /* **NEW: Top Bar to Visually Hide the Browser Address/Link** */
-        .status-bar-cover {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            /* Make this taller to cover most modern mobile browser address bars */
-            height: 80px; 
-            background-color: #000;
-            z-index: 9999; 
-            /* **NEW: Apply a strong shadow to make it look like a physical component** */
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.8); 
-        }
-
-        /* Content box for the error message */
         .error-container {
             width: 90%;
             max-width: 400px;
-            padding: 20px;
-            border: 2px solid #FF3B30; 
-            border-radius: 10px;
-            background-color: #1A1A1A; 
-            box-shadow: 0 0 30px rgba(255, 59, 48, 0.6); /* Stronger glow */
-            z-index: 10000; /* Ensure the error message is on top of the black bar */
+            padding: 25px;
+            border: 2px solid #FF3B30;
+            border-radius: 15px; /* Softer radius */
+            background-color: #1A1A1A;
+            box-shadow: 0 0 40px rgba(255, 59, 48, 0.7); /* Stronger glow */
+            z-index: 100000; /* Must be above the lock-layer */
+            pointer-events: auto; /* Allow interaction with the box */
         }
 
         h1 {
-            color: #FF3B30; 
-            font-size: 1.6em; /* Slightly larger */
-            margin-bottom: 8px;
+            color: #FF3B30;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+            animation: pulse 1s infinite alternate; /* Subtle breathing effect */
         }
-        
-        /* **NEW: More intense error message** */
-        .critical-message {
-            color: #FFCC00; /* Warning Yellow */
+
+        /* NEW: Custom red error message on failed attempts */
+        #status-message {
+            height: 20px;
+            color: #FF3B30;
             font-weight: bold;
+            font-size: 1.1em;
+            margin-top: -15px;
+            margin-bottom: 25px;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .critical-message {
+            color: #FFCC00;
+            font-weight: 900;
+            font-size: 1.1em;
             margin-bottom: 25px;
         }
 
         p {
             font-size: 1em;
             margin-top: 5px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             line-height: 1.4;
         }
 
-        /* Style for the activation code input field */
+        /* =================================================================== */
+        /* INPUT & BUTTON STYLING */
+        /* =================================================================== */
+
         #activation-input {
             width: 80%;
-            padding: 12px; /* Slightly larger input */
+            padding: 15px;
             margin-top: 15px;
-            border: 2px solid #5E5E5E;
-            border-radius: 5px;
-            font-size: 1.3em;
+            border: 3px solid #FF3B30; /* Red border focus */
+            border-radius: 8px;
+            font-size: 1.5em;
             text-align: center;
-            background-color: #333;
+            background-color: #000;
             color: #E8E8E8;
-            outline: none; 
-            letter-spacing: 5px; 
+            outline: none;
+            letter-spacing: 8px; /* More spacing */
+            box-shadow: 0 0 10px rgba(255, 59, 48, 0.4);
         }
 
-        /* Style for the 'Enter' button */
         #enter-button {
-            padding: 10px 25px; 
-            margin-top: 20px;
-            background-color: #FF3B30; /* Change to Red to match error theme */
+            padding: 12px 30px;
+            margin-top: 25px;
+            background-color: #FF3B30;
             color: white;
             border: none;
-            border-radius: 5px;
-            font-size: 1.1em;
+            border-radius: 8px;
+            font-size: 1.2em;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: background-color 0.1s, transform 0.1s;
             font-weight: bold;
         }
 
         #enter-button:hover {
             background-color: #FF0028;
+            transform: scale(1.05);
+        }
+
+        /* =================================================================== */
+        /* ANIMATIONS */
+        /* =================================================================== */
+
+        @keyframes pulse {
+            0% {
+                text-shadow: 0 0 5px rgba(255, 59, 48, 0.5);
+            }
+            100% {
+                text-shadow: 0 0 15px rgba(255, 59, 48, 1);
+            }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
         }
     </style>
 </head>
 <body>
-    <div class="status-bar-cover"></div>
+    <div class="lock-layer">
+        <div class="error-container" id="error-box">
+            <h1>❌ KERNEL PANIC: SYSTEM CRASH ❌</h1>
+            <p class="critical-message">
+                ***SEVERE OS DAMAGE DETECTED. ALL PERIPHERAL INPUTS DISABLED.***
+            </p>
+            <p>
+                Your device's mobile data, Wi-Fi, and notification services are temporarily offline for diagnostics. Any attempt to swipe or access system controls will be immediately rejected.
+            </p>
+            
+            <p id="status-message">ACCESS DENIED. ATTEMPT LOGGED.</p>
 
-    <div class="error-container">
-        <h1>❌ KERNEL PANIC: SYSTEM CRASH ❌</h1>
-        <p class="critical-message">
-            ***SEVERE OS DAMAGE DETECTED. ALL PERIPHERAL INPUTS DISABLED.***
-        </p>
-        <p>
-            Your device's mobile data, Wi-Fi, and notification services are temporarily offline for diagnostics. Any attempt to swipe or access system controls will be immediately rejected.
-        </p>
+            <p>
+                **EMERGENCY RE-ACTIVATION REQUIRED:** Please enter the security bypass code below to restore control.
+            </p>
 
-        <p>
-            **EMERGENCY RE-ACTIVATION REQUIRED:** Please enter the security bypass code below to restore control.
-        </p>
+            <input type="tel" id="activation-input" maxlength="4" placeholder="••••" pattern="[0-9]*" inputmode="numeric" autofocus>
+            <button id="enter-button">ACTIVATE</button>
 
-        <input type="tel" id="activation-input" maxlength="4" placeholder="••••" pattern="[0-9]*" inputmode="numeric" autofocus>
-        <button id="enter-button">ACTIVATE</button>
-
-        <p style="font-size: 0.7em; margin-top: 25px; color: #8C8C8C;">DO NOT RESTART. CONTACT 1-800-GULLIBLE IMMEDIATELY.</p>
+            <p style="font-size: 0.7em; margin-top: 25px; color: #8C8C8C;">DO NOT RESTART. CONTACT 1-800-GULLIBLE IMMEDIATELY.</p>
+        </div>
     </div>
 
     <script>
         // JavaScript for the prank functionality
-
         const input = document.getElementById('activation-input');
         const button = document.getElementById('enter-button');
+        const errorBox = document.getElementById('error-box');
+        const statusMessage = document.getElementById('status-message');
         const prankCode = '1234'; // The activation code to turn off the prank
+        const rickrollUrl = "https://www.youtube.com/watch?v=dQw4w9WgXcQ";
 
-        // **1. AGGRESSIVE SCROLL/TOUCH BLOCKER**
-        // Blocks scrolling/touch events and attempts to reset the scroll position immediately.
+        // ===================================================================
+        // 1. AGGRESSIVE SCROLL/TOUCH BLOCKER
+        // ===================================================================
+        
         function preventAllScrolling(e) {
-            e.preventDefault();
+            // Check if the event target is the input field itself. If it is, allow it.
+            if (e.target.id === 'activation-input') {
+                return;
+            }
+            
+            // CRITICAL: Block default touch and swipe actions
+            e.preventDefault(); 
+            e.stopPropagation();
+
             // Aggressive scroll reset: ensures screen position is 0, 0
             window.scrollTo(0, 0); 
             document.documentElement.scrollTop = 0;
             document.body.scrollTop = 0;
+            
+            // OPTIONAL: Shake the error box to show the "rejection" if they try to swipe.
+            errorBox.style.animation = 'shake 0.5s';
+            setTimeout(() => {
+                errorBox.style.animation = '';
+            }, 500);
         }
         
+        // Listen for all touch and scroll events on the body and window
+        document.body.addEventListener('touchstart', preventAllScrolling, { passive: false });
         document.body.addEventListener('touchmove', preventAllScrolling, { passive: false });
+        document.body.addEventListener('touchend', preventAllScrolling, { passive: false });
         document.body.addEventListener('scroll', preventAllScrolling, { passive: false });
         window.addEventListener('scroll', preventAllScrolling, { passive: false });
         
-        // **2. PREVENT ZOOMING** (via touch events)
+        // Prevent keyboard events that might allow escape (e.g. F5, Alt+Left)
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F5' || (e.altKey && e.key === 'ArrowLeft')) {
+                e.preventDefault();
+            }
+        });
+
+        // Prevent standard right-click/context menu
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Prevent zooming
         document.addEventListener('gesturestart', function(e) {
             e.preventDefault();
         });
 
-        // **3. BLOCK POP-UPS/ALERTS IF POSSIBLE (Fallback)**
-        // Not always effective but good for added paranoia.
-        window.onbeforeunload = function() {
-            // Return an empty string or null to prevent the typical "Are you sure you want to leave?" alert
-            return null;
-        };
+        // ===================================================================
+        // 2. ACTIVATION LOGIC
+        // ===================================================================
 
-        // 4. Fake 'Power Button' effect (Kept for the illusion)
-        document.addEventListener('visibilitychange', function() {
-             if (document.visibilityState === 'hidden') {
-                // When they hit the power/lock button, we don't want anything to happen.
-            } else {
-                // When they unlock the screen and come back, briefly flash a message.
-                // This simulates the error being "persistent" and overriding the power button.
-                console.log("Device Lock Override Active: Power button access denied.");
-                // We'll use a simple alert here, but you can remove it if it's too obvious.
-                alert("Security Override: System lock is persistent."); 
-            }
-        });
+        function showStatus(message) {
+            statusMessage.textContent = message;
+            statusMessage.style.opacity = '1';
+            // Hide the status message after a short time
+            setTimeout(() => {
+                statusMessage.style.opacity = '0';
+            }, 2500);
+        }
 
-
-        // 5. Activation Code Logic
         function checkCode() {
             if (input.value === prankCode) {
                 // Prank OFF: Redirect to a final funny message
-                alert("ACCESS GRANTED! System Error Cleared. Thank you for using the official Prank Activation Service.");
-                // Redirect to the Rickroll URL
-                window.location.href = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"; 
+                showStatus("✅ ACCESS GRANTED. CLEANSING SYSTEM...");
+                
+                // Disable all blocking scripts before redirecting
+                document.body.removeEventListener('touchmove', preventAllScrolling);
+                
+                // Final success delay before Rickroll
+                setTimeout(() => {
+                     window.location.href = rickrollUrl; 
+                }, 1000);
+
             } else {
-                // Prank ON: Show a fake "Access Denied" error
-                alert("‼️ ACCESS DENIED ‼️: Incorrect Code. Attempt logged. Please try again or contact the activation hotline.");
+                // Prank ON: Show a custom in-page "Access Denied" error
+                showStatus("‼️ ACCESS DENIED ‼️. Attempt logged.");
+                
+                // VIBRATE the phone for a system-level rejection feel (Android only)
+                if (navigator.vibrate) {
+                    navigator.vibrate(300); // Vibrate for 300ms
+                }
+
+                // Shake the error box on failure
+                errorBox.style.animation = 'shake 0.5s';
+                setTimeout(() => {
+                    errorBox.style.animation = '';
+                }, 500);
+                
                 input.value = ''; // Clear the input
                 input.focus();
             }
@@ -196,16 +286,18 @@
 
         button.addEventListener('click', checkCode);
         input.addEventListener('keyup', function(event) {
-            // Check if the Enter key (key 13) was pressed
             if (event.keyCode === 13) {
                 checkCode();
             }
         });
 
-        // Focus the input field on load for a better mobile experience
-        window.onload = function() {
+        // Focus the input field on load and re-focus aggressively
+        function focusInput() {
             input.focus();
-        };
+        }
+        window.onload = focusInput;
+        // Aggressively re-focus after a short delay, useful if the keyboard is dismissed
+        setInterval(focusInput, 5000); 
 
     </script>
 </body>
